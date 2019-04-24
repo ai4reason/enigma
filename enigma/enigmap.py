@@ -8,9 +8,11 @@ def sdbm(s):
       h &= 0xFFFFFFFFFFFFFFFF
    return h
 
-def fhash(s, base):
-   return 1 + (sdbm(s) % base)
-
+def fhash(s, base, cache={}):
+   if s not in cache:
+      cache[s] = 1 + (sdbm(s) % base)
+   return cache[s]
+      
 def load(f_map):
    emap = {}
    if not os.path.exists(f_map):
