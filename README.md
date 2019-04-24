@@ -1,11 +1,21 @@
-# Enigma
+# **ATPy** #
 
-Enigma a is an Inference Guiding Machine for Automated Theorem Provers.
+Python Library for ATP Projects.
 
 ## Quick Install
 
    $ pip install . --user
 
+## Developers
+
+   $ pip install -e . --user
+
 ## Credits
 
-Developments of this software prototype was supported by the ERC Consolidator grant no. 649043 *AI4REASON*, by ERC Starting grant no. 714034 *SMART*, by FWF grant P26201, and by  Cost Action CA15123 EUTypes.
+Development of this software prototype was supported by: 
+
++ ERC Consolidator grant no. 649043 *AI4REASON*
++ ERC Starting grant no. 714034 *SMART*
++ FWF grant P26201
++ Cost Action CA15123 *EUTypes*
+

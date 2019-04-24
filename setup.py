@@ -2,15 +2,20 @@ from setuptools import setup, find_packages
 
 setup(name='enigma',
       version='0.1',
-      description='Enigma: Efficient kNowlegde-base Inference Guiding MAchine',
+      description='Enigma: Inference Guiding Machine',
       url='http://github.com/ai4reason/enigma',
       author='ai4reason',
       license='GPL3',
       packages=find_packages(),
       scripts=[
+         'bin/eprover',
+         'bin/enigma-features',
          'bin/train',
-         'bin/predict',
-         'bin/enigma-features'
+         'bin/predict'
+      ],
+      install_requires=[
+         'xgboost',
+         'atpy @ https://github.com/ai4reson/atpy.git'
       ],
       zip_safe=False)
 
