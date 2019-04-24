@@ -15,7 +15,7 @@ setup(name='enigma',
       ],
       install_requires=[
          'xgboost',
-         'atpy @ https://github.com/ai4reson/atpy.git'
+         'atpy @ https://github.com/ai4reason/atpy.git'
       ],
       zip_safe=False)
 
