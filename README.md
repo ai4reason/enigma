@@ -13,8 +13,8 @@ $ pip install git+https://github.com/ai4reason/enigma --process-dependency-links
 
 This installs:
 
-* Python packages `atpy` and `enigma` from GitHub
-* other Python dependencies (`xgboost`, `numpy`, ...)
+* Python packages `atpy` and `enigma` from GitHub, and
+* other Python dependencies (`xgboost`, `numpy`, ...), and
 * statically compiled binaries for `eprover` with Enigma support, Enigma
   feature extractor `enigma-features`, and LIBLINEAR training and prediction
   binaries `train` and `predict`.
