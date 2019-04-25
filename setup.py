@@ -15,7 +15,8 @@ setup(name='enigma',
       ],
       install_requires=[
          'xgboost',
-         'atpy @ https://github.com/ai4reason/atpy/tarball/master#egg=atpy-0.1'
+         'atpy==0.1'
       ],
+      dependency_links=['https://github.com/ai4reason/atpy/tarball/master#egg=atpy-0.1'],
       zip_safe=False)
 

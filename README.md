@@ -1,14 +1,32 @@
-# **ATPy** #
+# **ENIGMA** #
 
-Python Library for ATP Projects.
+Inference guiding machine for saturation-based Automated Theorem Provers.
 
-## Quick Install
+## User Install
 
-   $ pip install . --user
+This is enough if you plan to use Enigma.
+
+   $ pip install git+https://github.com/ai4reason/enigma --process-dependency-links --user
 
 ## Developers
 
+You need this only if you plan to update the source codes.
+
+1. Install `atpy`:
+
+   $ git clone https://github.com/ai4reason/atpy.git
+   $ cd atpy
    $ pip install -e . --user
+
+2. Install `enigma`:
+
+   $ git clone https://github.com/ai4reason/enigma.git
+   $ cd enigma
+   $ pip install -e . --user
+
+After this, the `git pull` command issued in both `atpy` and `enigma`
+directories will automatically update both Python packages to their latest
+development versions from GitHub.
 
 ## Credits
 
