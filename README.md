@@ -8,7 +8,7 @@ This is enough if you plan to use Enigma.  There is no need to clone this
 repo manually.
 
 ```console
-pip install git+https://github.com/ai4reason/enigma --process-dependency-links --user
+$ pip install git+https://github.com/ai4reason/enigma --process-dependency-links --user
 ```
 
 This installs:
