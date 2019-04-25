@@ -7,7 +7,9 @@ Inference guiding machine for saturation-based Automated Theorem Provers.
 This is enough if you plan to use Enigma.  There is no need to clone this
 repo manually.
 
-   $ pip install git+https://github.com/ai4reason/enigma --process-dependency-links --user
+```console
+pip install git+https://github.com/ai4reason/enigma --process-dependency-links --user
+```
 
 This installs:
 
@@ -23,19 +25,19 @@ You need this only if you plan to update the source codes.
 
 1. Install `atpy`:
 
+   ```console
    $ git clone https://github.com/ai4reason/atpy.git
-
    $ cd atpy
-
    $ pip install -e . --user
+   ```
 
 2. Install `enigma`:
 
+   ```console
    $ git clone https://github.com/ai4reason/enigma.git
-
    $ cd enigma
-
    $ pip install -e . --user
+   ```
 
 After this, the `git pull` command issued in both `atpy` and `enigma`
 directories will automatically update both Python packages to their latest
