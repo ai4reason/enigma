@@ -1,7 +1,7 @@
 import re
 from atpy import expres
 
-def standalone(pid, name, mult=0, noinit=False, efun="Enigma"):
+def solo(pid, name, mult=0, noinit=False, efun="Enigma"):
    proto = expres.protos.load(pid)
    enigma = "1*%s(PreferWatchlist,%s,%s)" % (efun, name, mult)
    eproto = "%s-H'(%s)'" % (proto[:proto.index("-H'")], enigma)
@@ -14,7 +14,7 @@ def standalone(pid, name, mult=0, noinit=False, efun="Enigma"):
    expres.protos.save(epid, eproto)
    return epid
 
-def combined(pid, name, freq=None, mult=0, noinit=False, efun="Enigma"):
+def coop(pid, name, freq=None, mult=0, noinit=False, efun="Enigma"):
    proto = expres.protos.load(pid)
    post = efun
    if not freq:

@@ -1,8 +1,19 @@
 import os
-from . import enigmap, pretrains, trains, liblinear, protos, xgbooster
+from . import enigmap, pretrains, trains, protos
 from atpy import expres, log
 
 ENIGMA_ROOT = os.getenv("ENIGMA_ROOT", "./Enigma")
+
+DEFAULTS = {
+   "gzip": True,
+   "force": False,
+   "hashing": None,
+   "version": "VHSLC",
+   "eargs": "--training-examples=3 -s",
+   "cores": 4,
+   "learn_params": {}
+}
+
 
 def path(name, filename=None):
    if filename:
@@ -10,190 +21,118 @@ def path(name, filename=None):
    else:
       return os.path.join(ENIGMA_ROOT, name)
 
-def collect(name, rkeys, version, force, cores):
+
+def collect(name, rkeys, settings):
+   version = settings["version"]
+   force = settings["force"]
+   cores = settings["cores"]
+
    f_pre = path(name, "train.pre")
    if force or not os.path.isfile(f_pre):
       log.msg("+ extracting pretrains from results")
-      pretrains.prepare(rkeys, version, force, cores)
+      pretrains.prepare(rkeys, version, force, cores) # REFACTOR
       log.msg("+ collecting pretrains data")
       pretrains.make(rkeys, out=file(f_pre, "w"))
 
-def setup(name, rkeys, version, hashing, force, cores):
+
+def setup(name, rkeys, settings):
    os.system("mkdir -p %s" % path(name))
    f_pre = path(name, "train.pre")
    f_map = path(name, "enigma.map")
    f_log = path(name, "train.log")
+   hashing = settings["hashing"]
   
-   if os.path.isfile(f_map) and not force:
+   if os.path.isfile(f_map) and not settings["force"]:
       return enigmap.load(f_map) if not hashing else hashing
       
    if rkeys:
-      collect(name, rkeys, version, force, cores)
+      collect(name, rkeys, settings)
 
    #if os.path.isfile(f_log):
    #   os.system("rm -f %s" % f_log)
-   if force or not os.path.isfile(f_map):
+   if settings["force"] or not os.path.isfile(f_map):
       log.msg("+ creating feature info")
       emap = enigmap.create(file(f_pre), hashing)
-      enigmap.save(emap, f_map, version, hashing)
+      enigmap.save(emap, f_map, settings["version"], hashing)
    else:
       if not hashing:
          emap = enigmap.load(f_map)
 
    return emap if not hashing else hashing
 
-def standard(name, rkeys=None, version="VHSLC", force=False, gzip=True, xgb=False, xgb_params=None, hashing=None, cores=1):
+
+def make(name, rkeys, settings):
+   learner = settings["learner"]
+
    f_pre = path(name, "train.pre")
    f_in  = path(name, "train.in")
-   f_mod = path(name, "model.%s" % ("xgb" if xgb else "lin"))
-   f_out = path(name, "train.out")
+   f_mod = path(name, "model.%s" % learner.ext())
    f_log = path(name, "train.log")
 
-   if os.path.isfile(f_mod) and not force:
-      return
+   if os.path.isfile(f_mod) and not settings["force"]:
+      return True
 
-   emap = setup(name, rkeys, version, hashing, force, cores)
+   emap = setup(name, rkeys, settings)
    if not emap:
       os.system("rm -fr %s" % path(name))
       return False
 
-   if force or not os.path.isfile(f_in):
+   if settings["force"] or not os.path.isfile(f_in):
       log.msg("+ generating training data")
       trains.make(file(f_pre), emap, out=file(f_in, "w"))
 
-   if xgb:
-      log.msg("+ training xgboost")
-      xlog = file(f_log, "a")
-      xgbooster.train(f_in, f_mod, xlog, xgb_params)
-      xlog.close()
-   else:
-      log.msg("+ training liblinear")
-      liblinear.train(f_in, f_mod, f_out, f_log)
-      stat = liblinear.stats(f_in, f_out)
-      log.msg("\n".join(["%s = %s"%(x,stat[x]) for x in sorted(stat)]))
+   log.msg("+ training %s" % learner.name())
+   tlog = file(f_log, "a")
+   learner.build(f_in, f_mod, settings["learn_params"], tlog)
+   tlog.close()
 
-   if gzip:
+   if settings["gzip"]:
+      log.msg("+ compressing training files")
       os.system("cd %s; gzip -qf *.pre *.in *.out 2>/dev/null" % path(name))
 
    return True
 
-def smartboost(name, rkeys=None, version="VHSLC", force=False, gzip=True, xgb=False, xgb_params=None, hashing=None, cores=1):
-   it = 0
-   f_pre = path(name, "train.pre")
-   f_log = path(name, "train.log")
-   f_in  = path(name, "%02dtrain.in" % it)
-   f_Mod = path(name, "model.lin")
-   if not force and os.path.isfile(f_Mod):
-      return
-  
-   emap = setup(name, rkeys, version, hashing, force, cores)
-   if not emap:
-      os.system("rm -fr %s" % path(name))
-      return False
-   trains.make(file(f_pre), emap, out=file(f_in, "w"))
 
-   method = None
-   log.msg("+ smart-boosting")
-   xlog = file(f_log, "a")
-   ##
-   #method = "WRONG:POS"
-   #terminate = lambda s: s["ACC:POS"] > 0.999
-   ##
-   while True:
-      xlog.write("\n--- ITER %d ---\n\n" % it)
-      f_in  = path(name, "%02dtrain.in" % it)
-      f_in2 = path(name, "%02dtrain.in" % (it+1))
-      f_out = path(name, "%02dtrain.out" % it)
-      f_mod = path(name, "%02dmodel.lin" % it)
-      xlog.flush()
-      liblinear.train(f_in, f_mod, f_out, f_log)
-      stat = liblinear.stats(f_in, f_out)
-      xlog.write("\n".join(["%s = %s"%(x,stat[x]) for x in sorted(stat)]))
-      xlog.write("\n")
+def check(settings):
+   if ("h" in settings["version"] and not settings["hashing"]) or \
+      (settings["hashing"] and "h" not in settings["version"]):
+         raise Exception("enigma.models: Parameter hashing must be set to the hash base (int) iff version contains 'h'.")   
+   for x in DEFAULTS:
+      if x not in settings:
+         settings[x] = DEFAULTS[x]
+   for x in ["bid", "pids", "learner"]:
+      if x not in settings:
+         raise Exception("enigma.models: Required setting '%s' not set!" % x)   
+   if "results" not in settings:
+      settings["results"] = {}
 
-      if not method:
-         if stat["ACC:POS"] < stat["ACC:NEG"]:
-            method = "WRONG:POS"
-            terminate = lambda s: s["ACC:POS"] >= s["ACC:NEG"]
-         else:
-            method = "WRONG:NEG"
-            terminate = lambda s: s["ACC:NEG"] >= s["ACC:POS"]
 
-      #if stat["ACC:POS"] >= stat["ACC:NEG"]:
-      #if stat["WRONG:POS"] == 0:
-      if terminate(stat):
-         os.system("cp %s %s" % (f_mod, f_Mod))
-         break
-      trains.boost(f_in, f_out, out=file(f_in2,"w"), method=method)
-      it += 1
+def update(settings, pids=None):
+   if not pids:
+      pids = settings["pids"]
+   settings["results"].update(expres.benchmarks.eval(
+      settings["bid"], pids, settings["limit"], cores=settings["cores"], 
+      eargs=settings["eargs"], force=settings["force"]))
 
-   stat = liblinear.stats(f_in, f_out)
-   log.msg("\n".join(["%s = %s"%(x,stat[x]) for x in sorted(stat)]))
-   
-   if xgb:
-      f_xgb = path(name, "model.xgb")
-      xgbooster.train(f_in, f_xgb, xlog, xgb_params)
-   xlog.close()
-      
-   if gzip:
-      os.system("cd %s; gzip -qf *.pre *.in *.out 2>/dev/null" % path(name))
-   
-   return True
 
-def loop(model, pids, results=None, bid=None, limit=None, nick=None, xgb=False, efun="Enigma",
-         cores=4, version="VHSLC", force=False, gzip=True, eargs="", update=False, 
-         boosting=False, xgb_params=None, hashing=None):
+def loop(model, settings, nick=None):
+   check(settings)
    if nick:
       model = "%s/%s" % (model, nick)
    log.msg("Building model %s" % model)
-   if ("h" in version and not hashing) or (hashing and "h" not in version):
-      raise Exception("enigma.models.loop: Parameter hashing must be set to the hash base (int) iff version contains 'h'.")   
-   if results is None:
-      results = {}
-   if update:
-      results.update(expres.benchmarks.eval(bid, pids, limit, cores=cores, eargs=eargs, force=force))
-   
-   if boosting:
-      smartboost(model, results, version, force=force, gzip=gzip, xgb=xgb, xgb_params=xgb_params, hashing=hashing, cores=cores)
-   else:
-      standard(model, results, version, force=force, gzip=gzip, xgb=xgb, xgb_params=xgb_params, hashing=hashing, cores=cores)
-      
+
+   update(settings)
+   if not make(model, settings["results"], settings):
+      raise Exception("Enigma: FAILED: Building model %s" % model)
+   efun = settings["learner"].efun()
    new = [
-      protos.standalone(pids[0], model, mult=0, noinit=True, efun=efun),
-      protos.combined(pids[0], model, mult=0, noinit=True, efun=efun)
+      protos.solo(settings["pids"][0], model, mult=0, noinit=True, efun=efun),
+      protos.coop(settings["pids"][0], model, mult=0, noinit=True, efun=efun)
    ]
-   if update:
-      pids.extend(new)
-      results.update(expres.benchmarks.eval(bid, new, limit, cores=cores, eargs=eargs, force=force))
+   settings["pids"].extend(new)
+   update(settings, new)
    
    log.msg("Building model finished\n")
    return new
 
-
-
-def join(name, models, combine=max):
-   f_maps = [path(model, "enigma.map") for model in models]
-   emap = enigmap.join(f_maps)
-
-   ws1 = {ftr:[] for ftr in emap}
-   ws2 = {ftr:[] for ftr in emap}
-   for model in models:
-      f_mod = path(model, "model.lin")
-      f_map = path(model, "enigma.map")
-      (header,w1,w2) = liblinear.load(f_mod, f_map)
-      for ftr in w1:
-         if w1[ftr] != 0:
-            ws1[ftr].append(w1[ftr])
-      for ftr in w2:
-         if w2[ftr] != 0:
-            ws2[ftr].append(w2[ftr])
-   
-   w1 = {ftr:combine(ws1[ftr]) for ftr in emap if ws1[ftr]}
-   w2 = {ftr:combine(ws2[ftr]) for ftr in emap if ws2[ftr]}
-
-   os.system("mkdir -p %s" % path(name))
-   f_mod = path(name, "model.lin")
-   f_map = path(name, "enigma.map")
-   enigmap.save(emap, f_map)
-   liblinear.save(header, w1, w2, emap, f_mod)
 
