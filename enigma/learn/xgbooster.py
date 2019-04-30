@@ -10,6 +10,12 @@ DEFAULTS = {
 
 class XGBooster(Learner):
 
+   def __init__(self, **args):
+      self.params = dict(DEFAULTS)
+      self.params.update(args)
+      self.num_round = self.params["num_round"]
+      del self.params["num_round"]
+
    def efun(self):
       return "EnigmaXgb"
 
@@ -20,22 +26,18 @@ class XGBooster(Learner):
       return "XGBoost"
 
    def __repr__(self):
-      return "id string"
+      args = ["%s=%s"%(x,self.params[x]) for x in self.params]
+      args = ", ".join(args)
+      return "%s(%s, num_round=%s)" % (self.name(), args, self.num_round)
 
-   def train(self, f_in, f_mod, params=None):
+   def train(self, f_in, f_mod):
       dtrain = xgb.DMatrix(f_in)
       labels = dtrain.get_label()
       pos = float(len([x for x in labels if x == 1]))
       neg = float(len([x for x in labels if x == 0]))
 
-      pars = dict(DEFAULTS)
-      pars["scale_pos_weight"] = (neg/pos)
-      if params:
-         pars.update(params)
-      num_round = pars["num_round"]
-      del pars["num_round"]
-
-      bst = xgb.train(pars, dtrain, num_round, evals=[(dtrain, "training")])
+      self.params["scale_pos_weight"] = (neg/pos)
+      bst = xgb.train(self.params, dtrain, self.num_round, evals=[(dtrain, "training")])
       bst.save_model(f_mod)
       return bst
 

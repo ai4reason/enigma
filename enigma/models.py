@@ -11,7 +11,6 @@ DEFAULTS = {
    "version": "VHSLC",
    "eargs": "--training-examples=3 -s",
    "cores": 4,
-   "learn_params": {}
 }
 
 
@@ -30,7 +29,7 @@ def collect(name, rkeys, settings):
    f_pre = path(name, "train.pre")
    if force or not os.path.isfile(f_pre):
       log.msg("+ extracting pretrains from results")
-      pretrains.prepare(rkeys, version, force, cores) # REFACTOR
+      pretrains.prepare(rkeys, version, force, cores)
       log.msg("+ collecting pretrains data")
       pretrains.make(rkeys, out=file(f_pre, "w"))
 
@@ -83,7 +82,7 @@ def make(name, rkeys, settings):
 
    log.msg("+ training %s" % learner.name())
    tlog = file(f_log, "a")
-   learner.build(f_in, f_mod, settings["learn_params"], tlog)
+   learner.build(f_in, f_mod, tlog)
    tlog.close()
 
    if settings["gzip"]:
