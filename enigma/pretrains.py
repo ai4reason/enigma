@@ -3,27 +3,30 @@ import subprocess
 from atpy import expres, eprover
 import os
 
-def proofstate(f_pre, f_pos, f_neg):
+def proofstate(f_dat, f_pos, f_neg, hashing=None):
    def parse(clause):
       clause = clause[clause.rindex("proofvector")+12:].rstrip(",\n").strip().split(",")
       clause = [x.split("(")[0].split(":") for x in clause if x]
-      clause = ["$%s/%s"%tuple(x) for x in clause if x]
+      if not hashing:
+         clause = ["$%s/%s"%tuple(x) for x in clause if x]
+      else:
+         clause = ["%s:%s"%tuple(x) for x in clause if x]
       return " ".join(clause)
-   pre = file(f_pre).read().strip().split("\n")
-   pre = [x for x in pre if x]
+   dat = file(f_dat).read().strip().split("\n")
+   dat = [x for x in dat if x]
    i = 0
    for pos in file(f_pos):
-      pre[i] += " "+parse(pos)
+      dat[i] += " "+parse(pos)
       i += 1
    for neg in file(f_neg):
-      pre[i] += " "+parse(neg)
+      dat[i] += " "+parse(neg)
       i += 1
-   if i != len(pre):
-      raise Exception("File %s does not match files %s and %s!" % (f_pre,f_pos,f_neg))
-   file(f_pre, "w").write("\n".join(pre))
+   if i != len(dat):
+      raise Exception("File %s does not match files %s and %s!" % (f_dat,f_pos,f_neg))
+   file(f_dat, "w").write("\n".join(dat))
 
 def prepare1(job):
-   (bid, pid, problem, limit, version, force) = job
+   (bid,pid,problem,limit,version,force,hashing) = job
 
    f_problem = expres.benchmarks.path(bid, problem)
    f_cnf = expres.benchmarks.path(bid, "."+problem)+".cnf"
@@ -50,18 +53,23 @@ def prepare1(job):
       #prf.close()
       #os.system("cat %s | grep '^cnf' >> %s" % (f_prf, f_pos))
    
-   f_pre = expres.results.path(bid, pid, problem, limit, ext="pre")
-   if force or not os.path.isfile(f_pre):
-      out = file(f_pre, "w")
-      subprocess.call(["enigma-features", "--free-numbers", "--enigma-features=%s"%version, \
-         f_pos, f_neg, f_cnf], stdout=out)
-         #stdout=out, stderr=subprocess.STDOUT)
+   f_dat = expres.results.path(bid, pid, problem, limit, ext="in" if hashing else "pre")
+   if force or not os.path.isfile(f_dat):
+      out = file(f_dat, "w")
+      if not hashing:
+         subprocess.call(["enigma-features", "--free-numbers", "--enigma-features=%s"%version, \
+            f_pos, f_neg, f_cnf], stdout=out)
+            #stdout=out, stderr=subprocess.STDOUT)
+      else:
+         subprocess.call(["enigma-features", "--free-numbers", "--enigma-features=%s"%version, \
+            "--feature-hashing=%s"%hashing, f_pos, f_neg, f_cnf], stdout=out)
+
       out.close()
       if "W" in version:
-         proofstate(f_pre, f_pos, f_neg)
+         proofstate(f_dat, f_pos, f_neg, hashing)
 
-def prepare(rkeys, version, force=False, cores=1):
-   jobs = [rkey+(version,force) for rkey in rkeys]
+def prepare(rkeys, version, force=False, cores=1, hashing=None):
+   jobs = [rkey+(version,force,hashing) for rkey in rkeys]
    pool = Pool(cores)
    res = pool.map_async(prepare1, jobs).get(365*24*3600)
    pool.close()
@@ -82,16 +90,16 @@ def translate(f_cnf, f_conj, f_out):
       os.system("rm -fr %s" % f_empty)
    out.close()
 
-def make(rkeys, out=None):
-   pre = []
+def make(rkeys, out=None, hashing=None):
+   dat = []
    for (bid, pid, problem, limit) in rkeys:
-      f_pre = expres.results.path(bid, pid, problem, limit, ext="pre")
+      f_dat = expres.results.path(bid, pid, problem, limit, ext="in" if hashing else "pre")
       if out:
-         tmp = file(f_pre).read().strip()
+         tmp = file(f_dat).read().strip()
          if tmp:
             out.write(tmp)
             out.write("\n")
       else:
-         pre.extend(file(f_pre).read().strip().split("\n"))
-   return pre if not out else None
+         dat.extend(file(f_dat).read().strip().split("\n"))
+   return dat if not out else None
 

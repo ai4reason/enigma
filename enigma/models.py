@@ -11,6 +11,7 @@ DEFAULTS = {
    "version": "VHSLC",
    "eargs": "--training-examples=3 -s",
    "cores": 4,
+   "hash_debug": False,
 }
 
 
@@ -25,13 +26,14 @@ def collect(name, rkeys, settings):
    version = settings["version"]
    force = settings["force"]
    cores = settings["cores"]
+   hashing = settings["hashing"] if not settings["hash_debug"] else None
 
-   f_pre = path(name, "train.pre")
-   if force or not os.path.isfile(f_pre):
-      log.msg("+ extracting pretrains from results")
-      pretrains.prepare(rkeys, version, force, cores)
-      log.msg("+ collecting pretrains data")
-      pretrains.make(rkeys, out=file(f_pre, "w"))
+   f_dat = path(name, "train.%s" % ("in" if hashing else "pre"))
+   if force or not os.path.isfile(f_dat):
+      log.msg("+ extracting training data from results")
+      pretrains.prepare(rkeys, version, force, cores, hashing)
+      log.msg("+ collecting %s data" % ("training" if hashing else "pretrains"))
+      pretrains.make(rkeys, out=file(f_dat, "w"), hashing=hashing)
 
 
 def setup(name, rkeys, settings):
@@ -41,11 +43,15 @@ def setup(name, rkeys, settings):
    f_log = path(name, "train.log")
    hashing = settings["hashing"]
   
-   if os.path.isfile(f_map) and not settings["force"]:
+   if os.path.isfile(f_map) and os.path.isfile(f_pre) and not settings["force"]:
       return enigmap.load(f_map) if not hashing else hashing
       
    if rkeys:
       collect(name, rkeys, settings)
+
+   if hashing and not settings["hash_debug"]:
+      file(f_map,"w").write('version("%s").\nhash_base(%s).\n' % (settings["version"], hashing))
+      return hashing
 
    #if os.path.isfile(f_log):
    #   os.system("rm -f %s" % f_log)
@@ -75,10 +81,11 @@ def make(name, rkeys, settings):
    if not emap:
       os.system("rm -fr %s" % path(name))
       return False
-
-   if settings["force"] or not os.path.isfile(f_in):
-      log.msg("+ generating training data")
-      trains.make(file(f_pre), emap, out=file(f_in, "w"))
+   
+   if settings["hash_debug"] or not settings["hashing"]:
+      if settings["force"] or not os.path.isfile(f_in):
+         log.msg("+ generating training data")
+         trains.make(file(f_pre), emap, out=file(f_in, "w"))
 
    log.msg("+ training %s" % learner.name())
    tlog = file(f_log, "a")
