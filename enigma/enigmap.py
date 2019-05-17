@@ -18,7 +18,7 @@ def load(f_map):
    if not os.path.exists(f_map):
       return emap
    for line in file(f_map):
-      if line.startswith("version"):
+      if line.startswith("version") or line.startswith("hash_base"):
          continue
       # FIXME: load hashed stuff
       (fid,ftr) = line.strip().split("(")[1].split(",")
