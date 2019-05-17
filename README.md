@@ -8,7 +8,7 @@ This is enough if you plan to use Enigma.  There is no need to clone this
 repo manually.
 
 ```console
-$ pip install enigma
+$ pip install git+https://github.com/ai4reason/enigma --user
 ```
 
 This installs:
