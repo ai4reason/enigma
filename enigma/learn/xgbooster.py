@@ -8,7 +8,7 @@ DEFAULTS = {
    'num_round': 200
 }
 
-class XGBooster(Learner):
+class XGBoost(Learner):
 
    def __init__(self, **args):
       self.params = dict(DEFAULTS)

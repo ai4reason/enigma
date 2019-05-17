@@ -25,10 +25,13 @@ class Learner:
       if log:
          log.write("\nTraining Enigma model (%s):\n\n" % f_in)
          oldout = sys.stdout
+         olderr = sys.stderr
          sys.stdout = log
+         sys.stderr = log
       ret = self.train(f_in, f_mod)
       if log:
          sys.stdout = oldout
+         sys.stderr = olderr
       return ret
 
    def predict(self, f_in, f_mod):
