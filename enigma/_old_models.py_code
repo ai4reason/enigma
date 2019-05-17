@@ -1,6 +1,6 @@
 import os
 from . import enigmap, pretrains, trains, liblinear, protos, xgbooster
-from atpy import expres, log
+from pyprove import expres, log
 
 ENIGMA_ROOT = os.getenv("ENIGMA_ROOT", "./Enigma")
 

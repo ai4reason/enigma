@@ -15,8 +15,7 @@ setup(name='enigma',
       ],
       install_requires=[
          'xgboost',
-         'atpy==0.1'
+         'pyprove==0.1'
       ],
-      dependency_links=['https://github.com/ai4reason/atpy/tarball/master#egg=atpy-0.1'],
       zip_safe=False)
 

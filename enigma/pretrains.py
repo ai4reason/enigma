@@ -1,6 +1,6 @@
 from multiprocessing import Pool
 import subprocess
-from atpy import expres, eprover
+from pyprove import expres, eprover
 import os
 
 def proofstate(f_dat, f_pos, f_neg, hashing=None):

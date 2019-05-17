@@ -8,12 +8,12 @@ This is enough if you plan to use Enigma.  There is no need to clone this
 repo manually.
 
 ```console
-$ pip install git+https://github.com/ai4reason/enigma --process-dependency-links --user
+$ pip install enigma
 ```
 
 This installs:
 
-* Python packages `atpy` and `enigma` from GitHub, and
+* our Python packages `pyprove` and `enigma`, and
 * other Python dependencies (`xgboost`, `numpy`, ...), and
 * statically compiled binaries for `eprover` with Enigma support, Enigma
   feature extractor `enigma-features`, and LIBLINEAR training and prediction
@@ -23,11 +23,11 @@ This installs:
 
 You need this only if you plan to update the source codes.
 
-1. Install `atpy`:
+1. Install `pyprove`:
 
    ```console
-   $ git clone https://github.com/ai4reason/atpy.git
-   $ cd atpy
+   $ git clone https://github.com/ai4reason/pyprove.git
+   $ cd pyprove
    $ pip install -e . --user
    ```
 
@@ -39,7 +39,7 @@ You need this only if you plan to update the source codes.
    $ pip install -e . --user
    ```
 
-After this, the `git pull` command issued in both `atpy` and `enigma`
+After this, the `git pull` command issued in both `pyprove` and `enigma`
 directories will automatically update both Python packages to their latest
 development versions from GitHub.
 

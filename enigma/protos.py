@@ -1,5 +1,5 @@
 import re
-from atpy import expres
+from pyprove import expres
 
 def solo(pid, name, mult=0, noinit=False, efun="Enigma"):
    proto = expres.protos.load(pid)
